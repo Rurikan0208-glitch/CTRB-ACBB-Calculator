@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2c80ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="轴承计算器">
+    
+    <title>轴承计算器 (GB/T 24607-2023)</title>
+    
+    <style>
+        /* 优化移动端体验 */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        html, body {
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 15px;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            padding-bottom: 80px; /* 为底部提示留出空间 */
+        }
+        
+        /* 添加到主屏幕提示 */
+        .install-prompt {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #2c80ff, #2cb5ff);
+            color: white;
+            padding: 15px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .install-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .install-btn {
+            background: white;
+            color: #2c80ff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .close-install {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 应用状态指示器 */
+        .app-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            z-index: 999;
+            display: none;
+        }
+        
+        .app-status.offline {
+            background: #ff9800;
+        }
+        
+        /* 原样式保持不变，优化移动端 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, #2c80ff, #2cb5ff);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1a3a6f;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #eef2f8;
+            padding-bottom: 15px;
+        }
+        
+        h2 {
+            color: #1a3a6f;
+            margin: 20px 0 15px 0;
+            font-size: 1.2rem;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #dce3ed;
+        }
+        
+        h3 {
+            color: #1a3a6f;
+            margin: 15px 0 10px 0;
+            font-size: 1.1rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #5a6c8a;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .calculator-section {
+            background-color: #f9fbfd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #e1e8f2;
+        }
+        
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .input-group {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .input-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e5c;
+            font-size: 0.9rem;
+        }
+        
+        input, select {
+            padding: 12px 15px;
+            border: 1px solid #c8d3e6;
+            border-radius: 6px;
+            font-size: 16px; /* 防止iOS缩放 */
+            background-color: white;
+            width: 100%;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2c80ff;
+            box-shadow: 0 0 0 3px rgba(44, 128, 255, 0.1);
+        }
+        
+        .unit {
+            color: #6b7b9a;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .eta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.85rem;
+            display: block;
+            overflow-x: auto;
+        }
+        
+        .eta-table th, .eta-table td {
+            border: 1px solid #dce3ed;
+            padding: 8px;
+            text-align: center;
+            min-width: 60px;
+        }
+        
+        .eta-table th {
+            background-color: #f0f7ff;
+            color: #1a3a6f;
+            font-weight: 600;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .button-group {
+                flex-direction: row;
+            }
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .calculate-btn {
+            background-color: #2c80ff;
+            color: white;
+        }
+        
+        .calculate-btn:hover, .calculate-btn:active {
+            background-color: #1a6ce8;
+        }
+        
+        .reset-btn {
+            background-color: #f1f5fa;
+            color: #5a6c8a;
+            border: 1px solid #d1d9e9;
+        }
+        
+        .reset-btn:hover, .reset-btn:active {
+            background-color: #e4eaf5;
+        }
+        
+        .results {
+            background-color: #f0f7ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #2c80ff;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e1e8f2;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-value {
+            font-weight: 700;
+            color: #2c80ff;
+            font-size: 1rem;
+        }
+        
+        /* 角度换算器优化 */
+        .angle-converter {
+            background-color: #f0f7ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #d1d9e9;
+        }
+        
+        .converter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px 0;
+        }
+        
+        .converter-content {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .converter-content.show {
+            display: block;
+        }
+        
+        .converter-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .converter-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .converter-button-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .converter-btn {
+            background-color: #2c80ff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+    </style>
+    
+    <!-- 图标链接 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>">
+</head>
+<body>
+    <!-- 应用状态指示器 -->
+    <div id="appStatus" class="app-status">在线</div>
+    
+    <!-- 安装提示 -->
+    <div id="installPrompt" class="install-prompt">
+        <div class="install-content">
+            <span>📱 添加到主屏幕，像APP一样使用</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button class="install-btn" id="installButton">添加</button>
+                <button class="close-install" id="closeInstall">&times;</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1>圆锥滚子与角接触球轴承复合计算器</h1>
+        <div class="subtitle">基于国标GB/T 24607-2023 | 支持圆锥滚子轴承和角接触球轴承</div>
+        
+        <!-- 角度换算器 -->
+        <div class="angle-converter">
+            <div class="converter-header" onclick="toggleConverter()">
+                <h3>🔢 角度换算工具</h3>
+                <span id="converter-toggle">▼ 展开</span>
+            </div>
+            <div id="converter-content" class="converter-content">
+                <p style="margin-bottom: 15px; font-size: 0.9rem;">将度分秒格式转换为十进制度数，或将十进制度数转换为度分秒格式。</p>
+                
+                <div class="converter-grid">
+                    <div class="input-item">
+                        <label for="degrees">度 (°)</label>
+                        <input type="number" id="degrees" value="15" min="0" step="1">
+                        <div class="unit">整数部分 (0-360)</div>
+                    </div>
+                    
+                    <div class="input-item">
+                        <label for="minutes">分 (′)</label>
+                        <input type="number" id="minutes" value="20" min="0" max="59" step="1">
+                        <div class="unit">整数部分 (0-59)</div>
+                    </div>
+                    
+                    <div class="input-item">
+                        <label for="seconds">秒 (″)</label>
+                        <input type="number" id="seconds" value="0" min="0" max="59.999" step="0.001">
+                        <div class="unit">小数部分 (0-59.999)</div>
+                    </div>
+                    
+                    <div class="input-item">
+                        <label for="decimal-angle">十进制度数</label>
+                        <input type="number" id="decimal-angle" value="15.3333" step="0.0001">
+                        <div class="unit">示例: 15.3333 表示 15°20′</div>
+                    </div>
+                </div>
+                
+                <div class="converter-button-group">
+                    <button class="converter-btn" onclick="convertDMS2Decimal()">度分秒→十进制</button>
+                    <button class="converter-btn" onclick="convertDecimal2DMS()">十进制→度分秒</button>
+                    <button class="converter-btn" onclick="applyToBearing()">应用到计算</button>
+                    <button class="converter-btn" style="background-color: #f1f5fa; color: #5a6c8a;" onclick="resetConverter()">重置</button>
+                </div>
+                
+                <div id="converter-result" style="display: none; margin-top: 15px; padding: 10px; background: #e8f5e9; border-radius: 6px; border-left: 4px solid #4CAF50;">
+                    <div style="font-weight: bold; color: #1a3a6f;" id="conversion-result-text"></div>
+                    <div style="font-size: 0.85rem; color: #666; margin-top: 5px;" id="conversion-note"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="calculator-section">
+            <h2>1. 轴承参数输入</h2>
+            
+            <div class="input-group">
+                <div class="input-item">
+                    <label for="bearingType">轴承类型</label>
+                    <select id="bearingType" onchange="onBearingTypeChange()">
+                        <option value="tapered">圆锥滚子轴承</option>
+                        <option value="angular">角接触球轴承</option>
+                    </select>
+                </div>
+                
+                <div class="input-item">
+                    <label for="C">额定动载荷 C</label>
+                    <input type="number" id="C" value="89.3" step="0.1" min="0">
+                    <div class="unit">单位：kN</div>
+                </div>
+                
+                <div class="input-item">
+                    <label for="alpha">接触角 α</label>
+                    <input type="number" id="alpha" value="15.3333" step="0.0001" min="0" max="45">
+                    <div class="unit">单位：度 (°) 或使用上方换算工具</div>
+                </div>
+                
+                <div class="input-item">
+                    <label for="Fr_custom">径向载荷 Fr (可选)</label>
+                    <input type="number" id="Fr_custom" value="" step="0.1" min="0">
+                    <div class="unit">单位：kN (留空则根据国标计算)</div>
+                </div>
+                
+                <div class="input-item">
+                    <label for="Fa_custom">轴向载荷 Fa (可选)</label>
+                    <input type="number" id="Fa_custom" value="" step="0.1" min="0">
+                    <div class="unit">单位：kN (留空则根据国标计算)</div>
+                </div>
+                
+                <div class="input-item">
+                    <label for="speed">转速 n (可选)</label>
+                    <input type="number" id="speed" value="" step="1" min="0">
+                    <div class="unit">单位：rpm (用于计算寿命小时数)</div>
+                </div>
+            </div>
+            
+            <div id="angularEtaTable" style="display: none;">
+                <h3>角接触球轴承 η 值对应表</h3>
+                <table class="eta-table">
+                    <thead>
+                        <tr>
+                            <th>接触角 α (°)</th>
+                            <th>η 值</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>10</td><td>0.25</td></tr>
+                        <tr><td>15</td><td>0.35</td></tr>
+                        <tr><td>20</td><td>0.50</td></tr>
+                        <tr><td>25</td><td>0.60</td></tr>
+                        <tr><td>30</td><td>0.70</td></tr>
+                        <tr><td>35</td><td>0.85</td></tr>
+                        <tr><td>40</td><td>1.00</td></tr>
+                        <tr><td>45</td><td>1.25</td></tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 10px; padding: 10px; background: #fff9e6; border-radius: 6px; border-left: 4px solid #ffc107; font-size: 0.85rem;">
+                    <strong>注意：</strong> 对于角接触球轴承，η 值根据接触角从表中查得。如果输入的接触角不在表中，将使用线性插值法计算。
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="calculate-btn" onclick="calculateAll()">计算轴承载荷与寿命</button>
+                <button class="reset-btn" onclick="resetInputs()">重置输入</button>
+            </div>
+        </div>
+        
+        <div class="calculator-section">
+            <h2>2. 国标计算过程与结果</h2>
+            <div id="calculation-steps-container" style="background-color: #f9fbfd; border-radius: 8px; padding: 15px; margin-top: 15px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.85rem; line-height: 1.6; color: #3a4a6a; border: 1px solid #e1e8f2; max-height: 300px; overflow-y: auto;">
+                <div id="calculation-steps">输入参数后点击计算按钮查看详细计算过程...</div>
+            </div>
+            
+            <div id="final-result-container" style="display: none; background: linear-gradient(to right, #e8f2ff, #d8e8ff); border-radius: 8px; padding: 15px; margin-top: 15px; text-align: center; border: 2px solid #2c80ff;">
+                <h3 style="color: #1a3a6f; margin-bottom: 15px;">计算结果</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+                        <div style="font-weight: 600; color: #5a6c8a; font-size: 0.9rem; margin-bottom: 5px;">径向载荷 Fr</div>
+                        <div style="font-weight: 800; color: #2c80ff; font-size: 1.4rem;" id="Fr-result">0.00</div>
+                        <div style="color: #8a9aba; font-size: 0.9rem;">kN</div>
+                    </div>
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+                        <div style="font-weight: 600; color: #5a6c8a; font-size: 0.9rem; margin-bottom: 5px;">轴向载荷 Fa</div>
+                        <div style="font-weight: 800; color: #2c80ff; font-size: 1.4rem;" id="Fa-result">0.00</div>
+                        <div style="color: #8a9aba; font-size: 0.9rem;">kN</div>
+                    </div>
+                    <div style="background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+                        <div style="font-weight: 600; color: #5a6c8a; font-size: 0.9rem; margin-bottom: 5px;">当量动载荷 P</div>
+                        <div style="font-weight: 800; color: #2c80ff; font-size: 1.4rem;" id="P-result">0.00</div>
+                        <div style="color: #8a9aba; font-size: 0.9rem;">kN</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="calculator-section">
+            <h2>3. 轴承寿命计算结果</h2>
+            <div id="life-results" class="results" style="display: none;">
+                <h3>轴承额定寿命</h3>
+                <div class="result-item">
+                    <div class="result-label">轴承类型</div>
+                    <div class="result-value"><span id="bearing-type-result">圆锥滚子轴承</span></div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">当量动载荷 P</div>
+                    <div class="result-value"><span id="life-P">0.00</span> kN</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">基本额定寿命 L₁₀</div>
+                    <div class="result-value"><span id="L10-million">0.00</span> 百万转</div>
+                </div>
+                <div class="result-item" id="L10-hours-item" style="display: none;">
+                    <div class="result-label">在给定转速下的寿命 L₁₀h</div>
+                    <div class="result-value"><span id="L10-hours">0</span> 小时</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="background-color: #fff9e6; border-left: 4px solid #ffc107; padding: 15px; margin-top: 20px; border-radius: 0 8px 8px 0; font-size: 0.85rem; color: #6b5a3a;">
+            <strong>计算说明：</strong><br>
+            1. 圆锥滚子轴承：η = 1/(2Y)，其中 Y = 0.4 * cot(α)<br>
+            2. 角接触球轴承：η 值根据接触角从对应表中查得，不在表中时使用线性插值计算<br>
+            3. 当量动载荷 P = 0.3C 用于国标方法计算 Fr 和 Fa<br>
+            4. 寿命计算时 P = X·Fr + Y·Fa，其中 X = 0.4，Y = 0.4 * cot(α)<br>
+            5. 圆锥滚子轴承的寿命指数 p = 10/3，角接触球轴承的寿命指数 p = 3
+        </div>
+        
+        <!-- 如何使用提示 -->
+        <div style="margin-top: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #2c80ff;">
+            <h4 style="color: #1a3a6f; margin-bottom: 10px;">📱 添加到手机桌面</h4>
+            <div style="font-size: 0.85rem;">
+                <p><strong>iPhone用户：</strong> Safari浏览器 → 分享按钮 → 添加到主屏幕</p>
+                <p><strong>Android用户：</strong> Chrome浏览器 → 右上角菜单 → 添加到主屏幕</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #8a9aba; font-size: 0.8rem; padding-top: 15px; border-top: 1px solid #e1e8f2;">
+            圆锥滚子与角接触球轴承复合计算器 | 基于国标GB/T 24607-2023
+        </div>
+    </div>
+    
+    <script>
+        // PWA功能
+        let deferredPrompt;
+        const installPrompt = document.getElementById('installPrompt');
+        const installButton = document.getElementById('installButton');
+        const closeInstall = document.getElementById('closeInstall');
+        const appStatus = document.getElementById('appStatus');
+        
+        // 监听beforeinstallprompt事件
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // 显示安装提示（延迟显示，避免打扰用户）
+            setTimeout(() => {
+                installPrompt.style.display = 'block';
+            }, 3000);
+            
+            // 7天后不再显示
+            setTimeout(() => {
+                installPrompt.style.display = 'none';
+            }, 7 * 24 * 60 * 60 * 1000);
+        });
+        
+        // 安装按钮点击事件
+        installButton.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                console.log('用户安装了应用');
+                installPrompt.style.display = 'none';
+                
+                // 显示安装成功提示
+                showMessage('✅ 已添加到主屏幕，请返回桌面查看');
+            }
+            
+            deferredPrompt = null;
+        });
+        
+        // 关闭安装提示
+        closeInstall.addEventListener('click', () => {
+            installPrompt.style.display = 'none';
+            
+            // 3天内不再显示
+            setTimeout(() => {
+                if (deferredPrompt) {
+                    installPrompt.style.display = 'block';
+                }
+            }, 3 * 24 * 60 * 60 * 1000);
+        });
+        
+        // 监听应用安装
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA已安装到设备');
+            deferredPrompt = null;
+            installPrompt.style.display = 'none';
+        });
+        
+        // 网络状态检测
+        function updateOnlineStatus() {
+            if (navigator.onLine) {
+                appStatus.textContent = '在线';
+                appStatus.className = 'app-status';
+                appStatus.style.display = 'block';
+                
+                setTimeout(() => {
+                    appStatus.style.display = 'none';
+                }, 3000);
+            } else {
+                appStatus.textContent = '离线';
+                appStatus.className = 'app-status offline';
+                appStatus.style.display = 'block';
+                
+                showMessage('⚠️ 当前处于离线状态，部分功能可能受限');
+            }
+        }
+        
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        // 初始化网络状态
+        updateOnlineStatus();
+        
+        // 显示消息函数
+        function showMessage(message) {
+            const msgDiv = document.createElement('div');
+            msgDiv.textContent = message;
+            msgDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 20px;
+                z-index: 9999;
+                font-size: 0.9rem;
+                animation: fadeInOut 3s ease-in-out;
+            `;
+            
+            document.body.appendChild(msgDiv);
+            
+            setTimeout(() => {
+                if (msgDiv.parentNode) {
+                    msgDiv.parentNode.removeChild(msgDiv);
+                }
+            }, 3000);
+        }
+        
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 原角度换算和轴承计算逻辑
+        const angularEtaTable = [
+            {angle: 10, eta: 0.25},
+            {angle: 15, eta: 0.35},
+            {angle: 20, eta: 0.50},
+            {angle: 25, eta: 0.60},
+            {angle: 30, eta: 0.70},
+            {angle: 35, eta: 0.85},
+            {angle: 40, eta: 1.00},
+            {angle: 45, eta: 1.25}
+        ];
+        
+        // 角度换算工具函数
+        function toggleConverter() {
+            const content = document.getElementById('converter-content');
+            const toggle = document.getElementById('converter-toggle');
+            if (content.classList.contains('show')) {
+                content.classList.remove('show');
+                toggle.textContent = '▼ 展开';
+            } else {
+                content.classList.add('show');
+                toggle.textContent = '▲ 收起';
+            }
+        }
+        
+        function convertDMS2Decimal() {
+            const degrees = parseFloat(document.getElementById('degrees').value) || 0;
+            const minutes = parseFloat(document.getElementById('minutes').value) || 0;
+            const seconds = parseFloat(document.getElementById('seconds').value) || 0;
+            
+            if (degrees < 0 || degrees >= 360) {
+                showMessage("度值应在0-360之间");
+                return;
+            }
+            
+            if (minutes < 0 || minutes >= 60) {
+                showMessage("分值应在0-60之间");
+                return;
+            }
+            
+            if (seconds < 0 || seconds >= 60) {
+                showMessage("秒值应在0-60之间");
+                return;
+            }
+            
+            const decimal = degrees + minutes/60 + seconds/3600;
+            
+            document.getElementById('decimal-angle').value = decimal.toFixed(6);
+            
+            // 显示结果
+            const resultElement = document.getElementById('conversion-result-text');
+            const noteElement = document.getElementById('conversion-note');
+            resultElement.textContent = `${degrees}°${minutes}′${seconds.toFixed(3)}″ = ${decimal.toFixed(6)}°`;
+            noteElement.textContent = `计算：${degrees} + ${minutes}/60 + ${seconds}/3600`;
+            
+            document.getElementById('converter-result').style.display = 'block';
+            
+            showMessage(`角度换算完成：${decimal.toFixed(6)}°`);
+        }
+        
+        function convertDecimal2DMS() {
+            const decimal = parseFloat(document.getElementById('decimal-angle').value) || 0;
+            
+            if (decimal < 0 || decimal >= 360) {
+                showMessage("角度值应在0-360之间");
+                return;
+            }
+            
+            const degrees = Math.floor(decimal);
+            const minutesDecimal = (decimal - degrees) * 60;
+            const minutes = Math.floor(minutesDecimal);
+            const seconds = (minutesDecimal - minutes) * 60;
+            
+            document.getElementById('degrees').value = degrees;
+            document.getElementById('minutes').value = minutes;
+            document.getElementById('seconds').value = seconds.toFixed(3);
+            
+            // 显示结果
+            const resultElement = document.getElementById('conversion-result-text');
+            const noteElement = document.getElementById('conversion-note');
+            resultElement.textContent = `${decimal.toFixed(6)}° = ${degrees}°${minutes}′${seconds.toFixed(3)}″`;
+            noteElement.textContent = `计算：${decimal}-${degrees}=${(decimal-degrees).toFixed(6)}×60`;
+            
+            document.getElementById('converter-result').style.display = 'block';
+            
+            showMessage(`角度换算完成：${degrees}°${minutes}′${seconds.toFixed(3)}″`);
+        }
+        
+        function applyToBearing() {
+            const decimal = parseFloat(document.getElementById('decimal-angle').value) || 0;
+            
+            if (decimal < 0 || decimal > 45) {
+                showMessage("轴承接触角应在0-45度之间");
+                return;
+            }
+            
+            document.getElementById('alpha').value = decimal.toFixed(4);
+            
+            // 显示结果
+            const resultElement = document.getElementById('conversion-result-text');
+            const noteElement = document.getElementById('conversion-note');
+            resultElement.textContent = `已应用到接触角输入框: ${decimal.toFixed(4)}°`;
+            noteElement.textContent = "点击'计算轴承载荷与寿命'按钮开始计算";
+            
+            document.getElementById('converter-result').style.display = 'block';
+            
+            showMessage(`接触角已设置为 ${decimal.toFixed(4)}°`);
+            
+            // 自动折叠换算器
+            setTimeout(() => {
+                document.getElementById('converter-content').classList.remove('show');
+                document.getElementById('converter-toggle').textContent = '▼ 展开';
+            }, 1500);
+        }
+        
+        function resetConverter() {
+            document.getElementById('degrees').value = 15;
+            document.getElementById('minutes').value = 20;
+            document.getElementById('seconds').value = 0;
+            document.getElementById('decimal-angle').value = 15.3333;
+            document.getElementById('converter-result').style.display = 'none';
+            showMessage("角度换算器已重置");
+        }
+        
+        // 数学计算函数
+        function toRadians(degrees) {
+            return degrees * Math.PI / 180;
+        }
+        
+        // 根据轴承类型和接触角获取 η 值
+        function getEta(bearingType, alphaDeg) {
+            if (bearingType === "tapered") {
+                const alphaRad = toRadians(alphaDeg);
+                const cotAlpha = 1 / Math.tan(alphaRad);
+                const Y = 0.4 * cotAlpha;
+                return 1 / (2 * Y);
+            } else if (bearingType === "angular") {
+                if (alphaDeg <= angularEtaTable[0].angle) {
+                    return angularEtaTable[0].eta;
+                }
+                if (alphaDeg >= angularEtaTable[angularEtaTable.length - 1].angle) {
+                    return angularEtaTable[angularEtaTable.length - 1].eta;
+                }
+                
+                for (let i = 0; i < angularEtaTable.length - 1; i++) {
+                    const low = angularEtaTable[i];
+                    const high = angularEtaTable[i + 1];
+                    
+                    if (alphaDeg >= low.angle && alphaDeg <= high.angle) {
+                        const t = (alphaDeg - low.angle) / (high.angle - low.angle);
+                        return low.eta + t * (high.eta - low.eta);
+                    }
+                }
+                
+                return 0.5;
+            }
+            return 0.5;
+        }
+        
+        // 轴承类型变更处理
+        function onBearingTypeChange() {
+            const bearingType = document.getElementById('bearingType').value;
+            const etaTable = document.getElementById('angularEtaTable');
+            
+            if (bearingType === "angular") {
+                etaTable.style.display = "block";
+            } else {
+                etaTable.style.display = "none";
+            }
+        }
+        
+        function calculateBearingLoads(C, alphaDeg, bearingType) {
+            let steps = "";
+            
+            steps += `<div class="step">输入接触角 α = <strong>${alphaDeg.toFixed(4)}°</strong></div>`;
+            
+            const P = 0.3 * C;
+            steps += `<div class="step">1. 当量动载荷 P = 0.3 × C = 0.3 × ${C.toFixed(3)} = <strong>${P.toFixed(3)} kN</strong></div>`;
+            
+            const X = 0.4;
+            const alphaRad = toRadians(alphaDeg);
+            const cotAlpha = 1 / Math.tan(alphaRad);
+            const Y = 0.4 * cotAlpha;
+            steps += `<div class="step">2. 轴向系数 Y = 0.4 × cot(${alphaDeg.toFixed(4)}°) = 0.4 × ${cotAlpha.toFixed(4)} = <strong>${Y.toFixed(4)}</strong></div>`;
+            
+            let Mc;
+            if (alphaDeg <= 20) {
+                Mc = 0.25;
+                steps += `<div class="step">3. 接触角 α = ${alphaDeg.toFixed(4)}° ≤ 20°，取 Mc = <strong>0.25</strong></div>`;
+            } else {
+                Mc = 0.5;
+                steps += `<div class="step">3. 接触角 α = ${alphaDeg.toFixed(4)}° > 20°，取 Mc = <strong>0.5</strong></div>`;
+            }
+            
+            const eta = getEta(bearingType, alphaDeg);
+            
+            if (bearingType === "tapered") {
+                steps += `<div class="step">4. 圆锥滚子轴承，η = 1/(2Y) = 1/(2×${Y.toFixed(4)}) = <strong>${eta.toFixed(4)}</strong></div>`;
+            } else {
+                steps += `<div class="step">4. 角接触球轴承，根据接触角 α = ${alphaDeg.toFixed(4)}° 查表得 η = <strong>${eta.toFixed(4)}</strong></div>`;
+            }
+            
+            const denominator = X + Y * (Mc + eta);
+            const Fr = P / denominator;
+            steps += `<div class="step">5. 径向载荷 Fr = P / [X + Y×(Mc + η)]<br>`;
+            steps += `&nbsp;&nbsp;&nbsp;&nbsp;= ${P.toFixed(3)} / [${X} + ${Y.toFixed(4)}×(${Mc} + ${eta.toFixed(4)})]<br>`;
+            steps += `&nbsp;&nbsp;&nbsp;&nbsp;= <strong>${Fr.toFixed(3)} kN</strong></div>`;
+            
+            const Fa = Fr * (Mc + eta);
+            steps += `<div class="step">6. 轴向载荷 Fa = Fr × (Mc + η)<br>`;
+            steps += `&nbsp;&nbsp;&nbsp;&nbsp;= ${Fr.toFixed(3)} × (${Mc} + ${eta.toFixed(4)})<br>`;
+            steps += `&nbsp;&nbsp;&nbsp;&nbsp;= <strong>${Fa.toFixed(3)} kN</strong></div>`;
+            
+            return {Fr, Fa, P, Y, Mc, eta, steps};
+        }
+        
+        function calculateBearingLife(C, Fr, Fa, alphaDeg, bearingType, nRpm) {
+            const X = 0.4;
+            const alphaRad = toRadians(alphaDeg);
+            const cotAlpha = 1 / Math.tan(alphaRad);
+            const Y = 0.4 * cotAlpha;
+            
+            const P = X * Fr + Y * Fa;
+            
+            const p = (bearingType === "tapered") ? 10/3 : 3;
+            
+            const L10_million = Math.pow(C / P, p);
+            
+            let L10_hours = null;
+            if (nRpm !== null && nRpm > 0) {
+                L10_hours = (1000000 / (60 * nRpm)) * L10_million;
+            }
+            
+            return {P, L10_million, L10_hours, Y, p};
+        }
+        
+        function calculateAll() {
+            const bearingType = document.getElementById('bearingType').value;
+            const C = parseFloat(document.getElementById('C').value) || 0;
+            const alpha = parseFloat(document.getElementById('alpha').value) || 0;
+            const Fr_custom = document.getElementById('Fr_custom').value ? parseFloat(document.getElementById('Fr_custom').value) : null;
+            const Fa_custom = document.getElementById('Fa_custom').value ? parseFloat(document.getElementById('Fa_custom').value) : null;
+            const speed = document.getElementById('speed').value ? parseFloat(document.getElementById('speed').value) : null;
+            
+            if (C <= 0 || alpha <= 0) {
+                showMessage("请输入有效的额定动载荷C和接触角α值");
+                return;
+            }
+            
+            if (bearingType === "angular") {
+                if (alpha < 10 || alpha > 45) {
+                    showMessage("角接触球轴承的接触角应在10°到45°之间");
+                    return;
+                }
+            }
+            
+            let Fr, Fa, P, Y, Mc, eta, steps;
+            
+            if (Fr_custom !== null && Fa_custom !== null) {
+                Fr = Fr_custom;
+                Fa = Fa_custom;
+                
+                const alphaRad = toRadians(alpha);
+                const cotAlpha = 1 / Math.tan(alphaRad);
+                Y = 0.4 * cotAlpha;
+                P = 0.4 * Fr + Y * Fa;
+                
+                steps = `<div class="step">使用用户输入的载荷值：</div>`;
+                steps += `<div class="step">输入接触角 α = <strong>${alpha.toFixed(4)}°</strong></div>`;
+                steps += `<div class="step">径向载荷 Fr = <strong>${Fr.toFixed(3)} kN</strong></div>`;
+                steps += `<div class="step">轴向载荷 Fa = <strong>${Fa.toFixed(3)} kN</strong></div>`;
+                steps += `<div class="step">当量动载荷 P = X·Fr + Y·Fa = 0.4×${Fr.toFixed(3)} + ${Y.toFixed(4)}×${Fa.toFixed(3)} = <strong>${P.toFixed(3)} kN</strong></div>`;
+            } else {
+                const result = calculateBearingLoads(C, alpha, bearingType);
+                Fr = result.Fr;
+                Fa = result.Fa;
+                P = result.P;
+                Y = result.Y;
+                Mc = result.Mc;
+                eta = result.eta;
+                steps = result.steps;
+            }
+            
+            document.getElementById('calculation-steps').innerHTML = steps;
+            
+            document.getElementById('Fr-result').textContent = Fr.toFixed(3);
+            document.getElementById('Fa-result').textContent = Fa.toFixed(3);
+            document.getElementById('P-result').textContent = P.toFixed(3);
+            document.getElementById('final-result-container').style.display = 'block';
+            
+            const lifeResult = calculateBearingLife(C, Fr, Fa, alpha, bearingType, speed);
+            
+            document.getElementById('bearing-type-result').textContent = 
+                bearingType === "tapered" ? "圆锥滚子轴承" : "角接触球轴承";
+            document.getElementById('life-P').textContent = lifeResult.P.toFixed(3);
+            document.getElementById('L10-million').textContent = lifeResult.L10_million.toFixed(2);
+            
+            if (lifeResult.L10_hours !== null) {
+                document.getElementById('L10-hours').textContent = Math.round(lifeResult.L10_hours);
+                document.getElementById('L10-hours-item').style.display = 'flex';
+            } else {
+                document.getElementById('L10-hours-item').style.display = 'none';
+            }
+            
+            document.getElementById('life-results').style.display = 'block';
+            
+            // 保存到本地存储
+            saveToHistory({
+                timestamp: new Date().toLocaleString(),
+                bearingType: bearingType === "tapered" ? "圆锥滚子轴承" : "角接触球轴承",
+                C: C,
+                alpha: alpha,
+                Fr: Fr.toFixed(3),
+                Fa: Fa.toFixed(3),
+                P: P.toFixed(3),
+                L10: lifeResult.L10_million.toFixed(2)
+            });
+            
+            showMessage("计算完成！结果已保存");
+        }
+        
+        // 历史记录功能
+        function saveToHistory(result) {
+            let history = JSON.parse(localStorage.getItem('bearing_history') || '[]');
+            history.unshift(result);
+            if (history.length > 20) history = history.slice(0, 20);
+            localStorage.setItem('bearing_history', JSON.stringify(history));
+        }
+        
+        function resetInputs() {
+            document.getElementById('C').value = "89.3";
+            document.getElementById('alpha').value = "15.3333";
+            document.getElementById('Fr_custom').value = "";
+            document.getElementById('Fa_custom').value = "";
+            document.getElementById('speed').value = "";
+            document.getElementById('bearingType').value = "tapered";
+            
+            document.getElementById('angularEtaTable').style.display = 'none';
+            
+            document.getElementById('calculation-steps').innerHTML = "输入参数后点击计算按钮查看详细计算过程...";
+            document.getElementById('final-result-container').style.display = 'none';
+            document.getElementById('life-results').style.display = 'none';
+            
+            showMessage("输入已重置");
+        }
+        
+        // 页面加载时自动计算一次
+        window.onload = function() {
+            calculateAll();
+            
+            // 检查是否是从主屏幕启动
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log("从主屏幕启动");
+                appStatus.textContent = "应用模式";
+                appStatus.style.display = 'block';
+                
+                setTimeout(() => {
+                    appStatus.style.display = 'none';
+                }, 3000);
+            }
+        };
+    </script>
+</body>
+</html>
