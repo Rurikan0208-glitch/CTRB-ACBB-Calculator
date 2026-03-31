@@ -1,0 +1,21 @@
+{
+  "name": "轴承计算器",
+  "short_name": "轴承计算",
+  "description": "圆锥滚子与角接触球轴承复合计算器，基于国标GB/T 24607-2023",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2c80ff",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
