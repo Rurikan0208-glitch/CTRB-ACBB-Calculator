@@ -20,7 +20,7 @@
 ## 🚀 快速部署
 1. 将此仓库Fork到您的GitHub账户
 2. 在仓库Settings中开启GitHub Pages
-3. 访问 https://您的用户名.github.io/仓库名
+3. 访问 https://Rurikan0208-glitch.github.io/CTRB-ACBB-Calculator
 
 ## 📱 添加到手机桌面
 - **iPhone**: Safari → 分享 → 添加到主屏幕
